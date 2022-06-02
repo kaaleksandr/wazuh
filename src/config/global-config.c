@@ -795,9 +795,6 @@ void config_free(_Config *config) {
     labels_free(config->labels); /* null-ended label set */
 
     // Cluster configuration
-    if (config->cluster_name) {
-        free(config->cluster_name);
-    }
     if (config->node_name) {
         free(config->node_name);
     }
