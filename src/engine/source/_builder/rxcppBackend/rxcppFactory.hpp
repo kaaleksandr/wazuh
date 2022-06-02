@@ -199,21 +199,6 @@ rxcppFactory(const Observable& input,
                 return step1.filter([=](RxcppEvent result)
                                     { return *localResult; });
             }
-            case ConnectableGroup::FIRST_ERROR:
-            {
-                Observable step1 = input.publish().ref_count();
-                auto step2 = step1;
-                for (auto& connectable : asGroup->m_connectables)
-                {
-                    step2 =
-                        rxcppFactory(step2, connectable, controller, tracerFn)
-                            .filter([](RxcppEvent result)
-                                    { return result->success(); });
-                }
-                step2.subscribe();
-                return step1;
-            }
-
             default:
                 throw std::runtime_error(
                     fmt::format("Unsupported group type: {}", asGroup->m_type));

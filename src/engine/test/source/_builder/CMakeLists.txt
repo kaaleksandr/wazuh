@@ -1,13 +1,13 @@
 # Configuration Catalog tests
 add_executable(_builder_test
-  ${TEST_SOURCE_DIR}/_builder/connectable_test.cpp
-  ${TEST_SOURCE_DIR}/_builder/registry_test.cpp
+  #${TEST_SOURCE_DIR}/_builder/connectable_test.cpp
+  #${TEST_SOURCE_DIR}/_builder/registry_test.cpp
   ${ENGINE_SOURCE_DIR}/_builder/builders/operationBuilder.cpp
-  ${ENGINE_SOURCE_DIR}/_builder/builders/stageBuilders.cpp
+  ${ENGINE_SOURCE_DIR}/_builder/builders/stageBuilder.cpp
   ${ENGINE_SOURCE_DIR}/_builder/builders/assetBuilder.cpp
-  ${ENGINE_SOURCE_DIR}/_builder/builders/graphBuilders.cpp
+  #${ENGINE_SOURCE_DIR}/_builder/builders/graphBuilders.cpp
   ${TEST_SOURCE_DIR}/_builder/builder_test.cpp
-  ${TEST_SOURCE_DIR}/_builder/event_test.cpp
+  #${TEST_SOURCE_DIR}/_builder/event_test.cpp
 )
 
 target_include_directories(_builder_test
@@ -19,3 +19,16 @@ target_include_directories(_builder_test
 target_link_libraries(_builder_test gtest_main base)
 
 gtest_discover_tests(_builder_test)
+
+# add_executable(_expression_test
+#   ${TEST_SOURCE_DIR}/_builder/expression_test.cpp
+# )
+
+# target_include_directories(_expression_test
+#   PUBLIC
+#   ${TEST_SOURCE_DIR}/_builder
+# )
+
+# target_link_libraries(_expression_test gtest_main base)
+
+# gtest_discover_tests(_expression_test)

@@ -1,96 +1,97 @@
+#include "operationBuilder.hpp"
+
 #include <any>
 
-#include "_builder/connectable.hpp"
 #include "_builder/event.hpp"
+#include "_builder/expression.hpp"
 #include "_builder/json.hpp"
-#include "_builder/operation.hpp"
 #include "_builder/registry.hpp"
 #include <utils/stringUtils.hpp>
 
 namespace
 {
+
 using namespace builder::internals;
 
-std::shared_ptr<Connectable> conditionValueBuilder(std::string&& field,
-                                                   Json&& value)
+Expression conditionValueBuilder(std::string&& field, Json&& value)
 {
     const auto name =
         fmt::format("condition.value[{}=={}]", field, value.prettyStr());
     const auto successTrace = fmt::format("{} -> Success", name);
     const auto failureTrace = fmt::format("{} -> Failure", name);
-    return ConnectableOperation<Operation>::create(
+    return Term<Event>::create(
         name,
-        [=, field = std::move(field), value = std::move(value)](
-            Event<Json> event)
+        [field = std::move(field), value = std::move(value)](
+            Event event)
         {
-            if (event.payload().equals(field, value))
+            if (event.getJson().equals(field, value))
             {
-                return makeSuccess(std::move(event), successTrace);
+                return true;
             }
             else
             {
-                return makeFailure(std::move(event), failureTrace);
+                return false;
             }
         });
 }
 
-std::shared_ptr<Connectable> conditionReferenceBuilder(std::string&& field,
+Expression conditionReferenceBuilder(std::string&& field,
                                                        std::string&& reference)
 {
     const auto name =
         fmt::format("condition.reference[{}=={}]", field, reference);
     const auto successTrace = fmt::format("{} -> Success", name);
     const auto failureTrace = fmt::format("{} -> Failure", name);
-    return ConnectableOperation<Operation>::create(
+    return Term<Event>::create(
         name,
         [=, field = std::move(field), reference = std::move(reference)](
-            Event<Json> event)
+            Event event)
         {
-            if (event.payload().equals(field, reference))
+            if (event.getJson().equals(field, reference))
             {
-                return makeSuccess(std::move(event), successTrace);
+                return true;
             }
             else
             {
-                return makeFailure(std::move(event), failureTrace);
+                return false;
             }
         });
 }
 
-std::shared_ptr<Connectable> mapValueBuilder(std::string&& field, Json&& value)
+Expression mapValueBuilder(std::string&& field, Json&& value)
 {
     const auto name = fmt::format("map.value[{}={}]", field, value.prettyStr());
     const auto successTrace = fmt::format("{} -> Success", name);
-    return ConnectableOperation<Operation>::create(
+    return Term<Event>::create(
         name,
         [=, field = std::move(field), value = std::move(value)](
-            Event<Json> event)
+            Event event)
         {
-            event.payload().set(field, value);
-            return makeSuccess(std::move(event), successTrace);
+            event.getJson().set(field, value);
+            return true;
         });
 }
 
-std::shared_ptr<Connectable> mapReferenceBuilder(std::string&& field,
+Expression mapReferenceBuilder(std::string&& field,
                                                  std::string&& reference)
 {
     const auto name = fmt::format("map.reference[{}={}]", field, reference);
     const auto successTrace = fmt::format("{} -> Success", name);
     const auto failureTrace =
         fmt::format("{} -> Failure: [{}] not found", name, reference);
-    return ConnectableOperation<Operation>::create(
+    return Term<Event>::create(
         name,
         [=, field = std::move(field), reference = std::move(reference)](
-            Event<Json> event)
+            Event event)
         {
-            if (event.payload().exists(reference))
+            if (event.getJson().exists(reference))
             {
-                event.payload().set(field, reference);
-                return makeSuccess(std::move(event), successTrace);
+                event.getJson().set(field, reference);
+                return true;
             }
             else
             {
-                return makeFailure(std::move(event), failureTrace);
+                return false;
             }
         });
 }
@@ -101,7 +102,7 @@ enum OperationType
     FILTER
 };
 
-std::shared_ptr<Connectable> operationBuilder(const std::any& definition,
+Expression operationBuilder(const std::any& definition,
                                               OperationType type)
 {
     auto [field, value] =
@@ -153,17 +154,19 @@ std::shared_ptr<Connectable> operationBuilder(const std::any& definition,
     }
 }
 
-RegisterBuilder operationConditionBuilder {
-    "operation.condition",
-    [](const std::any& definition) -> std::shared_ptr<Connectable>
-    {
-        return operationBuilder(definition, FILTER);
-    }};
-
-RegisterBuilder operationMapBuilder {
-    "operation.map",
-    [](const std::any& definition) -> std::shared_ptr<Connectable>
-    {
-        return operationBuilder(definition, MAP);
-    }};
 } // namespace
+
+namespace builder::internals::builders
+{
+
+Expression operationConditionBuilder(std::any definition)
+{
+    return operationBuilder(definition, FILTER);
+}
+
+Expression operationMapBuilder(std::any definition)
+{
+    return operationBuilder(definition, MAP);
+}
+
+} // namespace builders::internals::builders
