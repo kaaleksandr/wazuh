@@ -385,12 +385,17 @@ void * run_worker(__attribute__((unused)) void * args) {
             }
 
             *response = '\0';
-            wdb_parse(buffer, response, peer);
+
+            if (buffer[0] == '{') {
+                wdbcom_dispatch(buffer, response);
+            } else {
+                wdb_parse(buffer, response, peer);
+            }
             if (length = strlen(response), length > 0) {
                 if (terminal && length < OS_MAXSTR - 1) {
                     response[length++] = '\n';
                 }
-                if (OS_SendSecureTCP(peer,length,response) < 0) {
+                if (OS_SendSecureTCP(peer, length, response) < 0) {
                     merror("at run_worker(): OS_SendSecureTCP(%d): %s (%d)",
                             peer, strerror(errno), errno);
                 }
